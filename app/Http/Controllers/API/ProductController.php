@@ -35,7 +35,8 @@ class ProductController extends BaseController
 
         $validator = Validator::make($input, [
             'name' => 'required',
-            'detail' => 'required'
+            'detail' => 'required',
+            'price' => 'required'
         ]);
 
         if ($validator->fails()) {
@@ -76,20 +77,35 @@ class ProductController extends BaseController
         $input = $request->all();
 
         $validator = Validator::make($input, [
-            'name' => 'required',
-            'detail' => 'required'
+            'name'   => 'sometimes|string',
+            'detail' => 'sometimes|string',
+            'price'  => 'sometimes|numeric'
         ]);
 
         if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors());
+            return response()->json(['error' => $validator->errors()], 422);
         }
 
-        $product->name = $input['name'];
-        $product->detail = $input['detail'];
+        // Update hanya field yang dikirimkan
+        if ($request->has('name')) {
+            $product->name = $request->name;
+        }
+        if ($request->has('detail')) {
+            $product->detail = $request->detail;
+        }
+        if ($request->has('price')) {
+            $product->price = $request->price;
+        }
+
         $product->save();
 
-        return $this->sendResponse(new ProductResource($product), 'Product updated successfully.');
+        return response()->json([
+            'success' => true,
+            'message' => 'Product updated successfully',
+            'data'    => $product
+        ]);
     }
+
 
     /**
      * Remove the specified resource from storage.
